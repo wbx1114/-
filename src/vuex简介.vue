@@ -11,7 +11,6 @@
 import { mapState, mapGetters, mapMutations } from 'vuex'
 export default {
   methods: {
-    // this.$store.commit('SET_COUNT', 10)
     ...mapMutations(['SET_COUNT'])
   },
 

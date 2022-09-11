@@ -10,3 +10,4 @@ export default {
 </script>
 
 <style scoped></style>
+yarn add vuex-persistedstate@3.2.1

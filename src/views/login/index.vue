@@ -77,7 +77,7 @@ export default {
         console.log(data)
         this.SET_TOKEN(data.data)
         this.$router.push('/profile')
-        this.$toast.success('登陆成功')
+        this.$toast.success('登录成功')
       } catch (error) {
         if (error.response && error.response.status === 400) {
           this.$toast.fail(error.response.data.message)
