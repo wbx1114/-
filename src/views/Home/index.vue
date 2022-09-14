@@ -24,6 +24,8 @@
       <ChannelEdit
         @change-active=";[(isShow = false), (active = $event)]"
         :MyChannel="channel"
+        @del-channel="delChannel"
+        @add-channel="addChannel"
       ></ChannelEdit>
     </van-popup>
   </div>
@@ -31,8 +33,9 @@
 
 <script>
 import ChannelEdit from './components/ChannelEdit.vue'
-import { getChannelAPI } from '@/api'
+import { getChannelAPI, DelChannelAPI, addChannelAPI } from '@/api'
 import ArticleList from './components/ArticleList.vue'
+import { mapGetters, mapMutations } from 'vuex'
 export default {
   components: {
     ArticleList,
@@ -46,9 +49,22 @@ export default {
     }
   },
   created() {
-    this.getChannel()
+    this.initChannels()
   },
   methods: {
+    ...mapMutations(['SET_MY_CHANNELS']),
+    initChannels() {
+      if (this.isLogin) {
+        this.getChannel()
+      } else {
+        const Channels = this.$store.state.myChannels
+        if (Channels.length === 0) {
+          this.getChannel()
+        } else {
+          this.channel = Channels
+        }
+      }
+    },
     async getChannel() {
       try {
         const { data } = await getChannelAPI()
@@ -62,7 +78,53 @@ export default {
           status === 507 && this.$toast.fail('刷新再试')
         }
       }
+    },
+    async delChannel(id) {
+      try {
+        const newChannel = this.channel.filter((item) => item.id !== id)
+        if (this.isLogin) {
+          // 发送请求删除频道
+          await DelChannelAPI(id)
+        } else {
+          // 把我的频道 存在本地存储
+          this.SET_MY_CHANNELS(newChannel)
+        }
+
+        // 视图层删除频道
+        this.channel = newChannel
+        this.$toast.success('删除频道成功')
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          this.$toast.fail('请登录后再删除')
+        } else {
+          throw error
+        }
+      }
+    },
+
+    async addChannel(channel) {
+      try {
+        if (this.isLogin) {
+          // 发送请求添加频道
+          await addChannelAPI(channel.id, this.channel.length)
+        } else {
+          this.SET_MY_CHANNELS([...this.channel, channel])
+        }
+        // 视图层添加频道
+        this.channel.push(channel)
+
+        this.$toast.success('添加成功')
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          this.$toast.fail('请登录后再添加')
+        } else {
+          throw error
+        }
+      }
     }
+  },
+  computed: {
+    ...mapGetters(['isLogin'])
   }
 }
 </script>
